@@ -1,0 +1,504 @@
+openapi: 3.0.4
+info:
+  title: Cloud Platform API
+  description: API Documentation for Cloud Platform designed to provide user management, payments, and subscription services for SaaS businesses and developer tools.
+  version: 1.1.1
+  contact:
+    name: Support
+    email: support@cloudplatform.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://api.{customerId}.com/v1
+    description: Main (production) server
+    variables:
+      customerId:
+        default: example
+        description: Customer identifier
+  - url: http://staging-api.polina.com
+    description: Internal staging server for testing
+
+tags:
+  - name: Users
+    description: Manage platform users
+    externalDocs:
+      url: https://example.com/docs/users
+      description: Learn more about user management
+  - name: Payments
+    description: Manage payment operations
+    externalDocs:
+      url: https://example.com/docs/payments
+      description: Learn more about payments
+
+paths:
+  /users:
+    post:
+      tags:
+        - Users
+      summary: Add new user
+      description: Add new user to the platform.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreate"
+            examples:
+              admin:
+                value:
+                  name: Alina Nazha
+                  email: nazha@gmail.com
+                  age: 23
+                  role: Administrator
+              customer:
+                value:
+                  name: Kamilla Ganni
+                  email: kami@yahoo.com
+                  age: 20
+                  role: Developer
+      responses:
+        "200":
+          description: Successfully created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: "101"
+                name: Alina Nazha
+                email: nazha@gmail.com
+                age: 23
+                role: Administrator
+                createdAt: "2024-02-06T14:15:00Z"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "Provided email is not valid"
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Retrieve detailed user information by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: "user-789"
+                name: Rick Roll
+                email: rickya@gmail.com
+                role: superadmin
+                createdAt: "2024-03-25T14:30:00Z"
+                updatedAt: "2024-03-25T14:30:00Z"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "No user found with this ID"
+
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: Update an existing user by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+            example:
+              name: "Jane Smith"
+              role: "admin"
+      responses:
+        "200":
+          description: Successfully updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: "user-789"
+                name: Jane Smith
+                email: jane.doe@example.com
+                role: admin
+                createdAt: "2024-03-25T14:30:00Z"
+                updatedAt: "2024-03-26T09:15:00Z"
+        "403":
+          description: Forbidden (unauthorized update)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "You do not have permission to update this user"
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      description: Delete a user by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user to delete
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully deleted user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+              example:
+                message: "User deleted successfully"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "User not found"
+
+  /payments:
+    post:
+      tags:
+        - Payments
+      summary: Process payment
+      description: Payment for annual subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCreate"
+            example:
+              amount: 25.99
+              currency: USD
+              description: Premium API Documentation Guide
+              customerEmail: user@example.com
+              paymentMethod: "card_12345"
+              userId: "user-456"
+      responses:
+        "201":
+          description: Payment successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              example:
+                id: "pay_123abc"
+                amount: 25.99
+                currency: USD
+                status: succeeded
+                customerEmail: user@example.com
+                receiptUrl: "https://example.com/receipts/pay_123abc"
+                createdAt: "2024-03-28T10:00:00Z"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "Sender does not have enough balance for this transaction."
+
+  /payments/{pay_id}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment details
+      description: Retrieve payment details by payment ID.
+      parameters:
+        - name: pay_id
+          in: path
+          required: true
+          description: ID of the payment to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              example:
+                pay_id: "pay_123abc"
+                amount: 25.99
+                currency: USD
+                status: succeeded
+                customerEmail: user@example.com
+                receiptUrl: "https://example.com/receipts/pay_123abc"
+                createdAt: "2024-03-28T10:00:00Z"
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "No payment found"
+
+  /subscriptions:
+    post:
+      tags:
+        - Payments
+      summary: Create subscription
+      description: Create a subscription for a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionCreate"
+            example:
+              planId: "premium_monthly"
+              customerEmail: "user@example.com"
+              paymentMethod: "card_12345"
+              metadata:
+                userId: "user-456"
+      responses:
+        "201":
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+              example:
+                id: "sub_789xyz"
+                planId: "premium_monthly"
+                status: "active"
+                currentPeriodEnd: "2024-04-28T10:00:00Z"
+                customerEmail: "user@example.com"
+                createdAt: "2024-03-28T10:00:00Z"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Invalid subscription plan"
+                message: "Plan 'premium_monthly' does not exist."
+
+  /subscriptions/{id}:
+    delete:
+      tags:
+        - Payments
+      summary: Cancel subscription
+      description: Cancel subscription by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the subscription to cancel
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Subscription canceled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+              example:
+                id: "sub_789xyz"
+                status: "canceled"
+                canceledAt: "2024-03-28T11:30:00Z"
+        "404":
+          description: Subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: "Subscription not found"
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+        role:
+          type: string
+          enum: [Administrator, Developer, superadmin]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserCreate:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+        role:
+          type: string
+          enum: [Administrator, Developer, superadmin]
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [Administrator, Developer, superadmin]
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+        status:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        receiptUrl:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentCreate:
+      type: object
+      required:
+        - amount
+        - currency
+        - customerEmail
+      properties:
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+        description:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        paymentMethod:
+          type: string
+        userId:
+          type: string
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+        planId:
+          type: string
+        status:
+          type: string
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        customerEmail:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+
+    SubscriptionCreate:
+      type: object
+      required:
+        - planId
+        - customerEmail
+      properties:
+        planId:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        paymentMethod:
+          type: string
+        metadata:
+          type: object
+          properties:
+            userId:
+              type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+
+securitySchemes:
+  apiKey:
+    type: apiKey
+    in: header
+    name: X-API-KEY
+
+security:
+  - apiKey: []
+  
+  
